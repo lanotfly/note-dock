@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Note Dock",
+  "version": "1.1.4",
+  "description": "A simple rich text notes app with headings, formatting, and colored highlights, in a side panel or a full page.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Note Dock",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "tabs",
+    "unlimitedStorage"
+  ]
+}

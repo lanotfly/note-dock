@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Note Dock</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1>Note Dock</h1>
+      <div class="header-actions">
+        <button id="displayModeBtn" class="display-mode-btn" title="Open in full page">&#10530;</button>
+        <button id="newNoteBtn" title="New note">+</button>
+      </div>
+    </div>
+    <ul id="noteList" class="note-list"></ul>
+  </aside>
+  <div id="sidebarResizer" class="sidebar-resizer" title="Drag to resize · Click to hide/show"></div>
+  <main class="editor-pane">
+    <div id="emptyState" class="empty-state">
+      <p>Select a note or create a new one.</p>
+    </div>
+    <div id="editorContainer" class="editor-container" hidden>
+      <div class="toolbar">
+        <select id="styleSelect" class="toolbar-select" title="Text style">
+          <option value="P">Normal text</option>
+          <option value="H1">Heading 1</option>
+          <option value="H2">Heading 2</option>
+          <option value="H3">Heading 3</option>
+        </select>
+        <span class="divider"></span>
+        <button data-cmd="bold" title="Bold"><b>B</b></button>
+        <button data-cmd="italic" title="Italic"><i>I</i></button>
+        <button data-cmd="underline" title="Underline"><u>U</u></button>
+        <button data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+        <span class="divider"></span>
+        <div class="toolbar-dropdown">
+          <button id="colorBtn" class="toolbar-color-btn" title="Text color &amp; highlight">A<span class="caret">&#9662;</span></button>
+          <div id="colorMenu" class="color-menu" hidden>
+            <div class="color-menu-section">
+              <div class="color-menu-label">Text color</div>
+              <div class="color-grid" id="textColorGrid"></div>
+            </div>
+            <div class="color-menu-section">
+              <div class="color-menu-label">Highlight</div>
+              <div class="color-grid" id="lineColorGrid"></div>
+            </div>
+            <div class="color-menu-section">
+              <div class="color-menu-label">Layout</div>
+              <label class="settings-toggle-row">
+                <span>Wide mode</span>
+                <input type="checkbox" id="wideModeCheckbox" />
+              </label>
+              <label class="settings-toggle-row" title="Turn this on if clicking the extension's toolbar icon opens the side panel but a second click doesn't close it (Vivaldi). Chrome doesn't need it.">
+                <span>Toolbar icon toggles panel</span>
+                <input type="checkbox" id="manualToggleCheckbox" />
+              </label>
+            </div>
+          </div>
+        </div>
+        <span class="divider"></span>
+        <select id="listSelect" class="toolbar-select" title="List style">
+          <option value="none">No list</option>
+          <option value="insertUnorderedList">Bulleted list</option>
+          <option value="insertOrderedList">Numbered list</option>
+        </select>
+        <span class="save-status" id="saveStatus"></span>
+      </div>
+      <div class="editor-scroll">
+        <input id="titleInput" class="title-input" placeholder="Untitled note" autocomplete="off" />
+        <div id="editorBody" class="editor-body">
+          <div id="foldGutter" class="fold-gutter"></div>
+          <div id="contentEditable" class="content-editable" contenteditable="true"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="/storage.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

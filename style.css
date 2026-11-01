@@ -1,0 +1,594 @@
+* { box-sizing: border-box; }
+
+:root {
+  --accent: #1a73e8;
+  --accent-dark: #1558b0;
+  --border: #e0e0e0;
+  --text: #202124;
+  --muted: #5f6368;
+  --bg-hover: #f1f3f4;
+  --bg-active: #e8f0fe;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--text);
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+body.tab-mode .app {
+  flex-direction: row;
+}
+
+/* Default (side panel): note list is a bottom strip, full width, resizable
+   height — a left-right split wastes space in a panel that's usually only
+   a few hundred pixels wide. In the full-page tab it's a left sidebar with
+   resizable width instead (order below restores that left-to-right order,
+   which already matches the sidebar/resizer/editor-pane source order). */
+.editor-pane { order: 1; }
+.sidebar-resizer { order: 2; }
+.sidebar { order: 3; }
+
+body.tab-mode .sidebar { order: 1; }
+body.tab-mode .sidebar-resizer { order: 2; }
+body.tab-mode .editor-pane { order: 3; }
+
+.sidebar {
+  width: 100%;
+  height: var(--sidebar-size, 200px);
+  min-height: 100px;
+  max-height: 80vh;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+body.tab-mode .sidebar {
+  width: var(--sidebar-size, 280px);
+  height: auto;
+  min-width: 180px;
+  max-width: 480px;
+  min-height: 0;
+  max-height: none;
+}
+
+.sidebar[hidden] {
+  display: none;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.sidebar-header h1 {
+  font-size: 18px;
+  margin: 0;
+  color: #000;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.display-mode-btn {
+  border: none;
+  background: none;
+  color: #000;
+  font-size: 28px;
+  font-weight: 600;
+  /* The arrow glyph (↗) doesn't have a distinct bold weight in most fonts,
+     so font-weight alone barely thickens it — this actually does. */
+  -webkit-text-stroke: 1.2px currentColor;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.display-mode-btn:hover {
+  color: var(--muted);
+}
+
+.sidebar-resizer {
+  width: 100%;
+  height: 10px;
+  flex-shrink: 0;
+  cursor: row-resize;
+  position: relative;
+}
+
+.sidebar-resizer::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 4px;
+  height: 2px;
+  background: var(--border);
+}
+
+.sidebar-resizer.collapsed {
+  height: 16px;
+  background: var(--bg-hover);
+}
+
+.sidebar-resizer.collapsed::after {
+  top: 7px;
+}
+
+body.tab-mode .sidebar-resizer {
+  width: 10px;
+  height: auto;
+  cursor: col-resize;
+}
+
+body.tab-mode .sidebar-resizer::after {
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  right: auto;
+  width: 6px;
+  height: auto;
+}
+
+body.tab-mode .sidebar-resizer.collapsed {
+  width: 16px;
+  height: auto;
+}
+
+body.tab-mode .sidebar-resizer.collapsed::after {
+  left: 5px;
+  top: 0;
+}
+
+.sidebar-resizer:hover::after,
+.sidebar-resizer.resizing::after {
+  background: var(--accent);
+}
+
+.sidebar-resizer.collapsed:hover::after {
+  background: var(--accent);
+}
+
+body.resizing-sidebar {
+  cursor: row-resize;
+  user-select: none;
+}
+
+body.tab-mode.resizing-sidebar {
+  cursor: col-resize;
+}
+
+#newNoteBtn {
+  border: none;
+  background: none;
+  color: #000;
+  font-size: 28px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+#newNoteBtn:hover {
+  color: var(--muted);
+}
+
+.note-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+  /* Queried below so the time can hide once the list itself gets narrow
+     (e.g. the tab's left sidebar dragged thin) — a container query keys
+     off this element's own rendered width, unlike a media query, which
+     would only see the whole window's width. */
+  container-type: inline-size;
+}
+
+/* When space is tight, drop the timestamp first so the title (the more
+   useful part) keeps its full width instead of being truncated early.
+   320px (above the tab sidebar's 280px default) so this is the normal
+   state at typical widths, not just when dragged unusually narrow —
+   the time only reappears once deliberately widened past that. */
+@container (max-width: 320px) {
+  .note-time {
+    display: none;
+  }
+}
+
+.note-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  cursor: pointer;
+  gap: 8px;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.note-item:hover {
+  background: var(--bg-hover);
+}
+
+.note-item.active {
+  background: var(--bg-active);
+}
+
+.note-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  color: #000;
+}
+
+.note-time {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.note-delete {
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  visibility: hidden;
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+.note-item:hover .note-delete {
+  visibility: visible;
+}
+
+.editor-pane {
+  flex: 1;
+  /* Flex items default to min-height: auto, not 0 — without this override,
+     .editor-pane refuses to shrink below its content's intrinsic minimum
+     (see .content-editable's min-height below), which silently capped how
+     far the panel-mode note list could be dragged, well short of the
+     max-height/JS clamp actually intended to be the limit. */
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.empty-state {
+  margin-top: 120px;
+  color: var(--muted);
+}
+
+.editor-container {
+  width: 100%;
+  max-width: 760px;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  transition: max-width 0.15s ease;
+}
+
+.editor-container.wide {
+  max-width: 1200px;
+}
+
+/* The toolbar lives outside the scrolling area entirely (rather than using
+   position: sticky on a scrolled ancestor), so it can never drift or scroll
+   away — sticky positioning proved fragile across environments. */
+.editor-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 24px 80px;
+}
+
+.title-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.toolbar button {
+  border: 1px solid transparent;
+  background: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.toolbar button:hover {
+  background: var(--bg-hover);
+}
+
+/* B/I/U/S are a fixed, equal-size box (rather than sized by their glyph's
+   natural width) so their active-state borders all line up consistently
+   instead of B ending up wider than I. */
+.toolbar button[data-cmd] {
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.toolbar button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.toolbar-select {
+  border: none;
+  background: none;
+  font-size: 13px;
+  color: var(--text);
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.toolbar-select:hover {
+  background: var(--bg-hover);
+}
+
+.toolbar-dropdown {
+  position: relative;
+}
+
+.toolbar-color-btn {
+  border: 1px solid transparent;
+  background: none;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.toolbar-color-btn:hover {
+  background: var(--bg-hover);
+}
+
+.toolbar-color-btn .caret {
+  font-size: 9px;
+  margin-left: 2px;
+  color: var(--muted);
+}
+
+.color-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  padding: 10px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.color-menu[hidden] {
+  display: none;
+}
+
+.color-menu-section + .color-menu-section {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.color-menu-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 6px;
+}
+
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.settings-toggle-row span {
+  white-space: nowrap;
+}
+.settings-toggle-row input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 22px);
+  gap: 6px;
+}
+
+.color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  padding: 0;
+}
+
+.color-swatch:hover {
+  transform: scale(1.12);
+}
+
+.color-swatch.none {
+  background-image: repeating-linear-gradient(45deg, #fff, #fff 4px, #e0e0e0 4px, #e0e0e0 8px);
+}
+
+.toolbar .divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+.save-status {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.editor-body {
+  position: relative;
+  padding-left: 20px;
+}
+
+.fold-gutter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 100%;
+  pointer-events: none;
+}
+
+.fold-toggle {
+  position: absolute;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+  pointer-events: auto;
+}
+
+.fold-toggle:hover {
+  color: var(--accent);
+}
+
+.content-editable {
+  /* Kept small by default (panel mode) so the flex chain above can
+     actually shrink the editor to make room when the bottom note list is
+     dragged taller; the generous 60vh floor only makes sense in the tab's
+     left/right layout, where the editor isn't competing for vertical
+     space with a resizable sibling. */
+  min-height: 120px;
+  outline: none;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+body.tab-mode .content-editable {
+  min-height: 60vh;
+}
+
+.content-editable > *[hidden] {
+  display: none;
+}
+
+.content-editable h1 { font-size: 26px; margin: 16px 0 8px; }
+.content-editable h2 { font-size: 20px; margin: 14px 0 6px; }
+.content-editable h3 { font-size: 17px; margin: 12px 0 4px; }
+
+/* Plain lines, paragraphs, and lists all share the same vertical margin, so
+   converting a line to/from a bullet or numbered list (or between <div>
+   and <p>) never shifts its height or the spacing around it. */
+.content-editable div,
+.content-editable p,
+.content-editable ul,
+.content-editable ol {
+  margin: 8px 0;
+}
+
+.content-editable ul,
+.content-editable ol {
+  padding-left: 24px;
+}
+
+/* A nested list's margin (inherited from the rule above) stacks on top of
+   the normal line spacing at every nesting transition, making those gaps
+   look bigger than the gap between sibling items at the same level — so
+   nested lists get no extra margin of their own. A descendant selector
+   (not li > ul) is needed here: Chrome's execCommand('indent'), which is
+   what Tab actually uses, produces a nested <ul> as a sibling of <li>
+   inside the outer <ul> rather than wrapped inside one, so it wouldn't
+   otherwise match. */
+.content-editable ul ul,
+.content-editable ul ol,
+.content-editable ol ul,
+.content-editable ol ol {
+  margin: 0;
+}
+
+/* Bullet style repeats disc -> circle -> square every 3 nesting levels. */
+.content-editable ul { list-style-type: disc; }
+.content-editable ul ul { list-style-type: circle; }
+.content-editable ul ul ul { list-style-type: square; }
+.content-editable ul ul ul ul { list-style-type: disc; }
+.content-editable ul ul ul ul ul { list-style-type: circle; }
+.content-editable ul ul ul ul ul ul { list-style-type: square; }
+.content-editable ul ul ul ul ul ul ul { list-style-type: disc; }
+.content-editable ul ul ul ul ul ul ul ul { list-style-type: circle; }
+.content-editable ul ul ul ul ul ul ul ul ul { list-style-type: square; }
+.content-editable ul ul ul ul ul ul ul ul ul ul { list-style-type: disc; }
+.content-editable ul ul ul ul ul ul ul ul ul ul ul { list-style-type: circle; }
+.content-editable ul ul ul ul ul ul ul ul ul ul ul ul { list-style-type: square; }
+
+/* Numbered style repeats decimal -> lower-alpha -> lower-roman every 3 levels. */
+.content-editable ol { list-style-type: decimal; }
+.content-editable ol ol { list-style-type: lower-alpha; }
+.content-editable ol ol ol { list-style-type: lower-roman; }
+.content-editable ol ol ol ol { list-style-type: decimal; }
+.content-editable ol ol ol ol ol { list-style-type: lower-alpha; }
+.content-editable ol ol ol ol ol ol { list-style-type: lower-roman; }
+.content-editable ol ol ol ol ol ol ol { list-style-type: decimal; }
+.content-editable ol ol ol ol ol ol ol ol { list-style-type: lower-alpha; }
+.content-editable ol ol ol ol ol ol ol ol ol { list-style-type: lower-roman; }
+.content-editable ol ol ol ol ol ol ol ol ol ol { list-style-type: decimal; }
+.content-editable ol ol ol ol ol ol ol ol ol ol ol { list-style-type: lower-alpha; }
+.content-editable ol ol ol ol ol ol ol ol ol ol ol ol { list-style-type: lower-roman; }
